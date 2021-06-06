@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="carry.ilearn.dao.SectionDao">
+	<resultMap id="BaseResultMap" type="carry.ilearn.dataobject.SectionDO">
+		<id column="id" jdbcType="INTEGER" property="id" />
+		<result column="title" jdbcType="VARCHAR" property="title" />
+		<result column="video_url" jdbcType="VARCHAR" property="videoUrl" />
+		<result column="seconds" jdbcType="INTEGER" property="seconds" />
+		<result column="poster_file_name" jdbcType="VARCHAR" property="posterFileName" />
+		<result column="poster_url" jdbcType="VARCHAR" property="posterUrl" />
+		<result column="chapter_id" jdbcType="INTEGER" property="chapterId" />
+	</resultMap>
+	<sql id="Base_Column_List">
+		id, title, video_url, `seconds`, poster_file_name, poster_url, chapter_id
+	</sql>
+	<select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+		select
+		<include refid="Base_Column_List" />
+		from section
+		where id = #{id,jdbcType=INTEGER}
+	</select>
+	<select id="selectByChapterId" resultMap="BaseResultMap">
+		select
+		<include refid="Base_Column_List" />
+		from section
+		where chapter_id = #{chapterId,jdbcType=INTEGER}
+	</select>
+	<select id="selectByChapterIdWithLearn" resultMap="BaseResultMap">
+		select
+			section.id,
+			title,
+			video_url,
+			`seconds`,
+			poster_file_name,
+			poster_url,
+			chapter_id,
+			learn.status,
+			learn.achieve_time achieveTime
+		from
+			section
+				left join learn on section.id = learn.section_id and learn.user_id = #{userId,jdbcType=INTEGER}
+		where
+			chapter_id = #{chapterId,jdbcType=INTEGER}
+	</select>
+	<select id="selectCourseIdBySectionId" resultType="java.lang.Integer">
+		select
+			course_id
+		from
+			chapter
+		where
+				id =
+				(select
+					 chapter_id
+				 from
+					 section
+				 where
+					 id = #{sectionId,jdbcType=INTEGER}
+				)
+	</select>
+	<delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+		delete
+		from
+			section
+		where
+			id = #{id,jdbcType=INTEGER}
+	</delete>
+	<delete id="deleteByChapterId">
+		delete
+		from
+			section
+		where
+			chapter_id = #{chapterId,jdbcType=INTEGER}
+	</delete>
+	<insert id="insert" keyColumn="id" keyProperty="id" parameterType="carry.ilearn.dataobject.SectionDO"
+	        useGeneratedKeys="true">
+		insert into section
+			(title, video_url, `seconds`,
+			 poster_file_name, poster_url, chapter_id)
+		values
+			(#{title,jdbcType=VARCHAR}, #{videoUrl,jdbcType=VARCHAR}, #{seconds,jdbcType=INTEGER},
+			 #{posterFileName,jdbcType=VARCHAR}, #{posterUrl,jdbcType=VARCHAR}, #{chapterId,jdbcType=INTEGER})
+	</insert>
+	<insert id="insertSelective" keyColumn="id" keyProperty="id" parameterType="carry.ilearn.dataobject.SectionDO"
+	        useGeneratedKeys="true">
+		insert into section
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="title != null">
+				title,
+			</if>
+			<if test="videoUrl != null">
+				video_url,
+			</if>
+			<if test="seconds != null">
+				`seconds`,
+			</if>
+			<if test="posterFileName != null">
+				poster_file_name,
+			</if>
+			<if test="posterUrl != null">
+				poster_url,
+			</if>
+			<if test="chapterId != null">
+				chapter_id,
+			</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="title != null">
+				#{title,jdbcType=VARCHAR},
+			</if>
+			<if test="videoUrl != null">
+				#{videoUrl,jdbcType=VARCHAR},
+			</if>
+			<if test="seconds != null">
+				#{seconds,jdbcType=INTEGER},
+			</if>
+			<if test="posterFileName != null">
+				#{posterFileName,jdbcType=VARCHAR},
+			</if>
+			<if test="posterUrl != null">
+				#{posterUrl,jdbcType=VARCHAR},
+			</if>
+			<if test="chapterId != null">
+				#{chapterId,jdbcType=INTEGER},
+			</if>
+		</trim>
+	</insert>
+	<update id="updateByPrimaryKeySelective" parameterType="carry.ilearn.dataobject.SectionDO">
+		update section
+		<set>
+			<if test="title != null">
+				title = #{title,jdbcType=VARCHAR},
+			</if>
+			<if test="videoUrl != null">
+				video_url = #{videoUrl,jdbcType=VARCHAR},
+			</if>
+			<if test="seconds != null">
+				`seconds` = #{seconds,jdbcType=INTEGER},
+			</if>
+			<if test="posterFileName != null">
+				poster_file_name = #{posterFileName,jdbcType=VARCHAR},
+			</if>
+			<if test="posterUrl != null">
+				poster_url = #{posterUrl,jdbcType=VARCHAR},
+			</if>
+			<if test="chapterId != null">
+				chapter_id = #{chapterId,jdbcType=INTEGER},
+			</if>
+		</set>
+		where id = #{id,jdbcType=INTEGER}
+	</update>
+	<update id="updateByPrimaryKey" parameterType="carry.ilearn.dataobject.SectionDO">
+		update section
+		set title            = #{title,jdbcType=VARCHAR},
+		    video_url        = #{videoUrl,jdbcType=VARCHAR},
+		    `seconds`        = #{seconds,jdbcType=INTEGER},
+		    poster_file_name = #{posterFileName,jdbcType=VARCHAR},
+		    poster_url       = #{posterUrl,jdbcType=VARCHAR},
+		    chapter_id       = #{chapterId,jdbcType=INTEGER}
+		where
+			id = #{id,jdbcType=INTEGER}
+	</update>
+</mapper>

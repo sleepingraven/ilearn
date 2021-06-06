@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="carry.ilearn.dao.ExamDao">
+	<resultMap id="BaseResultMap" type="carry.ilearn.dataobject.ExamDO">
+		<id column="id" jdbcType="INTEGER" property="id" />
+		<result column="title" jdbcType="VARCHAR" property="title" />
+		<result column="start_time" jdbcType="TIMESTAMP" property="startTime" />
+		<result column="total_time" jdbcType="INTEGER" property="totalTime" />
+		<result column="href" jdbcType="VARCHAR" property="href" />
+		<result column="user_id" jdbcType="INTEGER" property="userId" />
+		<result column="code" jdbcType="VARCHAR" property="code" />
+	</resultMap>
+	<sql id="Base_Column_List">
+		id, title, start_time, total_time, href, user_id, code
+	</sql>
+	<select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+		select
+		<include refid="Base_Column_List" />
+		from exam
+		where id = #{id,jdbcType=INTEGER}
+	</select>
+	<select id="selectByUserId" resultMap="BaseResultMap">
+		select
+		<include refid="Base_Column_List" />
+		from exam
+		where user_id = #{userId,jdbcType=INTEGER}
+	</select>
+	<select id="selectByCode" resultMap="BaseResultMap">
+		select
+		<include refid="Base_Column_List" />
+		from exam
+		where code = #{code,jdbcType=INTEGER}
+	</select>
+	<select id="selectJointByUserId" resultMap="BaseResultMap">
+		select
+		<include refid="Base_Column_List" />
+		from exam
+		where id in
+		(
+		select
+		exam_id
+		from user_exam
+		where user_id = #{userId,jdbcType=INTEGER}
+		)
+	</select>
+	<delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+		delete
+		from
+			exam
+		where
+			id = #{id,jdbcType=INTEGER}
+	</delete>
+	<insert id="insert" keyColumn="id" keyProperty="id" parameterType="carry.ilearn.dataobject.ExamDO"
+	        useGeneratedKeys="true">
+		insert into exam
+			(title, start_time, total_time,
+			 href, user_id, code)
+		values
+			(#{title,jdbcType=VARCHAR}, #{startTime,jdbcType=TIMESTAMP}, #{totalTime,jdbcType=INTEGER},
+			 #{href,jdbcType=VARCHAR}, #{userId,jdbcType=INTEGER}, #{code,jdbcType=VARCHAR})
+	</insert>
+	<insert id="insertSelective" keyColumn="id" keyProperty="id" parameterType="carry.ilearn.dataobject.ExamDO"
+	        useGeneratedKeys="true">
+		insert into exam
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="title != null">
+				title,
+			</if>
+			<if test="startTime != null">
+				start_time,
+			</if>
+			<if test="totalTime != null">
+				total_time,
+			</if>
+			<if test="href != null">
+				href,
+			</if>
+			<if test="userId != null">
+				user_id,
+			</if>
+			<if test="code != null">
+				code,
+			</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="title != null">
+				#{title,jdbcType=VARCHAR},
+			</if>
+			<if test="startTime != null">
+				#{startTime,jdbcType=TIMESTAMP},
+			</if>
+			<if test="totalTime != null">
+				#{totalTime,jdbcType=INTEGER},
+			</if>
+			<if test="href != null">
+				#{href,jdbcType=VARCHAR},
+			</if>
+			<if test="userId != null">
+				#{userId,jdbcType=INTEGER},
+			</if>
+			<if test="code != null">
+				#{code,jdbcType=VARCHAR},
+			</if>
+		</trim>
+	</insert>
+	<update id="updateByPrimaryKeySelective" parameterType="carry.ilearn.dataobject.ExamDO">
+		update exam
+		<set>
+			<if test="title != null">
+				title = #{title,jdbcType=VARCHAR},
+			</if>
+			<if test="startTime != null">
+				start_time = #{startTime,jdbcType=TIMESTAMP},
+			</if>
+			<if test="totalTime != null">
+				total_time = #{totalTime,jdbcType=INTEGER},
+			</if>
+			<if test="href != null">
+				href = #{href,jdbcType=VARCHAR},
+			</if>
+			<if test="userId != null">
+				user_id = #{userId,jdbcType=INTEGER},
+			</if>
+			<if test="code != null">
+				code = #{code,jdbcType=VARCHAR},
+			</if>
+		</set>
+		where id = #{id,jdbcType=INTEGER}
+	</update>
+	<update id="updateByPrimaryKey" parameterType="carry.ilearn.dataobject.ExamDO">
+		update exam
+		set title      = #{title,jdbcType=VARCHAR},
+		    start_time = #{startTime,jdbcType=TIMESTAMP},
+		    total_time = #{totalTime,jdbcType=INTEGER},
+		    href       = #{href,jdbcType=VARCHAR},
+		    user_id    = #{userId,jdbcType=INTEGER},
+		    code       = #{code,jdbcType=VARCHAR}
+		where
+			id = #{id,jdbcType=INTEGER}
+	</update>
+</mapper>

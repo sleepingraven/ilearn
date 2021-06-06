@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="carry.ilearn.dao.UserReceivedRepliesUnreadDao">
+  <resultMap id="BaseResultMap" type="carry.ilearn.dataobject.UserReceivedRepliesUnreadDO">
+    <result column="id" jdbcType="INTEGER" property="id" />
+    <result column="received_id" jdbcType="INTEGER" property="receivedId" />
+  </resultMap>
+  <insert id="insert" parameterType="carry.ilearn.dataobject.UserReceivedRepliesUnreadDO">
+    insert into user_received_replies_unread (id, received_id)
+    values (#{id,jdbcType=INTEGER}, #{receivedId,jdbcType=INTEGER})
+  </insert>
+  <insert id="insertSelective" parameterType="carry.ilearn.dataobject.UserReceivedRepliesUnreadDO">
+    insert into user_received_replies_unread
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="receivedId != null">
+        received_id,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="receivedId != null">
+        #{receivedId,jdbcType=INTEGER},
+      </if>
+    </trim>
+  </insert>
+</mapper>

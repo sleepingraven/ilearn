@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="carry.ilearn.dao.CourseDao">
+	<resultMap id="BaseResultMap" type="carry.ilearn.dataobject.CourseDO">
+		<id column="id" jdbcType="INTEGER" property="id" />
+		<result column="title" jdbcType="VARCHAR" property="title" />
+		<result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+		<result column="preview_img_url" jdbcType="VARCHAR" property="previewImgUrl" />
+		<result column="total_learning" jdbcType="INTEGER" property="totalLearning" />
+		<result column="user_id" jdbcType="INTEGER" property="userId" />
+		<result column="notice" jdbcType="VARCHAR" property="notice" />
+		<result column="banned" jdbcType="TINYINT" property="banned" />
+	</resultMap>
+	<sql id="Base_Column_List">
+		id, title, create_time, preview_img_url, total_learning, user_id, notice, banned
+	</sql>
+	<select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+		select
+		<include refid="Base_Column_List" />
+		from course
+		where id = #{id,jdbcType=INTEGER}
+	</select>
+	<select id="selectByIdAndUserId" resultMap="BaseResultMap">
+		select
+		<include refid="Base_Column_List" />
+		from course
+		where id = #{id,jdbcType=INTEGER}
+		and user_id = #{userId,jdbcType=INTEGER}
+	</select>
+	<select id="checkByIdAndUserId" resultType="java.lang.Boolean">
+		select
+			EXISTS(
+					select *
+					from
+						course
+					where
+						  id = #{id,jdbcType=INTEGER}
+					  and user_id = #{userId,jdbcType=INTEGER}
+				)
+	</select>
+	<select id="selectByUserId" resultMap="BaseResultMap">
+		select
+		<include refid="Base_Column_List" />
+		from course
+		where user_id = #{userId,jdbcType=INTEGER}
+	</select>
+	<select id="selectAllPaged" resultMap="BaseResultMap">
+		select
+		<include refid="Base_Column_List" />
+		from course
+		where banned = false
+		limit #{offset,jdbcType=INTEGER}, #{limit,jdbcType=INTEGER}
+	</select>
+	<select id="selectTotalNum" resultType="long">
+		select
+			count(*)
+		from
+			course
+		where
+			banned = false
+	</select>
+	<delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+		delete
+		from
+			course
+		where
+			id = #{id,jdbcType=INTEGER}
+	</delete>
+	<insert id="insert" keyColumn="id" keyProperty="id" parameterType="carry.ilearn.dataobject.CourseDO"
+	        useGeneratedKeys="true">
+		insert into course
+			(title, create_time, preview_img_url,
+			 total_learning, user_id, notice,
+			 banned)
+		values
+			(#{title,jdbcType=VARCHAR}, #{createTime,jdbcType=TIMESTAMP}, #{previewImgUrl,jdbcType=VARCHAR},
+			 #{totalLearning,jdbcType=INTEGER}, #{userId,jdbcType=INTEGER}, #{notice,jdbcType=VARCHAR},
+			 #{banned,jdbcType=TINYINT})
+	</insert>
+	<insert id="insertSelective" keyColumn="id" keyProperty="id" parameterType="carry.ilearn.dataobject.CourseDO"
+	        useGeneratedKeys="true">
+		insert into course
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="title != null">
+				title,
+			</if>
+			<if test="createTime != null">
+				create_time,
+			</if>
+			<if test="previewImgUrl != null">
+				preview_img_url,
+			</if>
+			<if test="totalLearning != null">
+				total_learning,
+			</if>
+			<if test="userId != null">
+				user_id,
+			</if>
+			<if test="notice != null">
+				notice,
+			</if>
+			<if test="banned != null">
+				banned,
+			</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="title != null">
+				#{title,jdbcType=VARCHAR},
+			</if>
+			<if test="createTime != null">
+				#{create_time,jdbcType=TIMESTAMP},
+			</if>
+			<if test="previewImgUrl != null">
+				#{previewImgUrl,jdbcType=VARCHAR},
+			</if>
+			<if test="totalLearning != null">
+				#{totalLearning,jdbcType=INTEGER},
+			</if>
+			<if test="userId != null">
+				#{userId,jdbcType=INTEGER},
+			</if>
+			<if test="notice != null">
+				#{notice,jdbcType=VARCHAR},
+			</if>
+			<if test="banned != null">
+				#{banned,jdbcType=TINYINT},
+			</if>
+		</trim>
+	</insert>
+	<update id="updateByPrimaryKeySelective" parameterType="carry.ilearn.dataobject.CourseDO">
+		update course
+		<set>
+			<if test="title != null">
+				title = #{title,jdbcType=VARCHAR},
+			</if>
+			<if test="createTime != null">
+				create_time = #{createTime,jdbcType=TIMESTAMP},
+			</if>
+			<if test="previewImgUrl != null">
+				preview_img_url = #{previewImgUrl,jdbcType=VARCHAR},
+			</if>
+			<if test="totalLearning != null">
+				total_learning = #{totalLearning,jdbcType=INTEGER},
+			</if>
+			<if test="userId != null">
+				user_id = #{userId,jdbcType=INTEGER},
+			</if>
+			<if test="notice != null">
+				notice = #{notice,jdbcType=VARCHAR},
+			</if>
+			<if test="banned != null">
+				banned = #{banned,jdbcType=TINYINT},
+			</if>
+		</set>
+		where id = #{id,jdbcType=INTEGER}
+	</update>
+	<update id="updateByPrimaryKey" parameterType="carry.ilearn.dataobject.CourseDO">
+		update course
+		set title           = #{title,jdbcType=VARCHAR},
+		    create_time     = #{createTime,jdbcType=TIMESTAMP},
+		    preview_img_url = #{previewImgUrl,jdbcType=VARCHAR},
+		    total_learning  = #{totalLearning,jdbcType=INTEGER},
+		    user_id         = #{userId,jdbcType=INTEGER},
+		    notice          = #{notice,jdbcType=VARCHAR},
+		    banned          = #{banned,jdbcType=TINYINT}
+		where
+			id = #{id,jdbcType=INTEGER}
+	</update>
+	<update id="updateBannedByIdAndUserId">
+		update
+			course
+		set banned = #{banned,jdbcType=INTEGER}
+		where
+			  id = #{id,jdbcType=INTEGER}
+		  and user_id = #{userId,jdbcType=INTEGER}
+	</update>
+</mapper>

@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="carry.ilearn.dao.PostDao">
+	<resultMap id="BaseResultMap" type="carry.ilearn.dataobject.PostDO">
+		<id column="id" jdbcType="INTEGER" property="id" />
+		<result column="title" jdbcType="VARCHAR" property="title" />
+		<result column="course_id" jdbcType="INTEGER" property="courseId" />
+		<result column="statement_id" jdbcType="INTEGER" property="statementId" />
+		<result column="total_replies" jdbcType="INTEGER" property="totalReplies" />
+		<result column="first_level_comments" jdbcType="INTEGER" property="firstLevelComments" />
+		<association property="statementDO" column="statement_id" javaType="carry.ilearn.dataobject.StatementDO"
+		             select="carry.ilearn.dao.StatementDao.selectByPrimaryKey" />
+	</resultMap>
+	<sql id="Base_Column_List">
+		id, title, course_id, statement_id, total_replies, first_level_comments
+	</sql>
+	<select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+		select
+		<include refid="Base_Column_List" />
+		from post
+		where id = #{id,jdbcType=INTEGER}
+	</select>
+	<select id="selectByCourseIdPaged" resultMap="BaseResultMap">
+		select
+		<include refid="Base_Column_List" />
+		from post
+		where
+		course_id = #{courseId,jdbcType=INTEGER}
+		limit #{offset,jdbcType=INTEGER}, #{limit,jdbcType=INTEGER}
+	</select>
+	<delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+		delete
+		from
+			post
+		where
+			id = #{id,jdbcType=INTEGER}
+	</delete>
+	<insert id="insert" keyColumn="id" keyProperty="id" parameterType="carry.ilearn.dataobject.PostDO"
+	        useGeneratedKeys="true">
+		insert into post
+			(title, course_id, statement_id,
+			 total_replies, first_level_comments)
+		values
+			(#{title,jdbcType=VARCHAR}, #{courseId,jdbcType=INTEGER}, #{statementId,jdbcType=INTEGER},
+			 #{totalReplies,jdbcType=INTEGER}, #{firstLevelComments,jdbcType=INTEGER})
+	</insert>
+	<insert id="insertSelective" keyColumn="id" keyProperty="id" parameterType="carry.ilearn.dataobject.PostDO"
+	        useGeneratedKeys="true">
+		insert into post
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="title != null">
+				title,
+			</if>
+			<if test="courseId != null">
+				course_id,
+			</if>
+			<if test="statementId != null">
+				statement_id,
+			</if>
+			<if test="totalReplies != null">
+				total_replies,
+			</if>
+			<if test="firstLevelComments != null">
+				first_level_comments,
+			</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="title != null">
+				#{title,jdbcType=VARCHAR},
+			</if>
+			<if test="courseId != null">
+				#{courseId,jdbcType=INTEGER},
+			</if>
+			<if test="statementId != null">
+				#{statementId,jdbcType=INTEGER},
+			</if>
+			<if test="totalReplies != null">
+				#{totalReplies,jdbcType=INTEGER},
+			</if>
+			<if test="firstLevelComments != null">
+				#{firstLevelComments,jdbcType=INTEGER},
+			</if>
+		</trim>
+	</insert>
+	<update id="updateByPrimaryKeySelective" parameterType="carry.ilearn.dataobject.PostDO">
+		update post
+		<set>
+			<if test="title != null">
+				title = #{title,jdbcType=VARCHAR},
+			</if>
+			<if test="courseId != null">
+				course_id = #{courseId,jdbcType=INTEGER},
+			</if>
+			<if test="statementId != null">
+				statement_id = #{statementId,jdbcType=INTEGER},
+			</if>
+			<if test="totalReplies != null">
+				total_replies = #{totalReplies,jdbcType=INTEGER},
+			</if>
+			<if test="firstLevelComments != null">
+				first_level_comments = #{firstLevelComments,jdbcType=INTEGER},
+			</if>
+		</set>
+		where id = #{id,jdbcType=INTEGER}
+	</update>
+	<update id="updateByPrimaryKey" parameterType="carry.ilearn.dataobject.PostDO">
+		update post
+		set title                = #{title,jdbcType=VARCHAR},
+		    course_id            = #{courseId,jdbcType=INTEGER},
+		    statement_id         = #{statementId,jdbcType=INTEGER},
+		    total_replies        = #{totalReplies,jdbcType=INTEGER},
+		    first_level_comments = #{firstLevelComments,jdbcType=INTEGER}
+		where
+			id = #{id,jdbcType=INTEGER}
+	</update>
+	<update id="increaseReply">
+		update post
+		set total_replies = total_replies + 1
+		where
+			id = #{id,jdbcType=INTEGER}
+	</update>
+	<update id="increaseFirstLevelReply">
+		update post
+		set total_replies        = total_replies + 1,
+		    first_level_comments = first_level_comments + 1
+		where
+			id = #{id,jdbcType=INTEGER}
+	</update>
+</mapper>

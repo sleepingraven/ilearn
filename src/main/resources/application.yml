@@ -1,0 +1,52 @@
+# 应用服务 WEB 访问端口
+server.port: 8090
+
+app:
+  filesystem:
+    server: http://localhost:8090/
+    pathPrefix: archive
+    resourceLocation: D:/ilearn/files/
+    initCategories: images,videos,courseware
+
+spring:
+  application:
+    # 应用名称
+    name: ilearn
+  servlet:
+    multipart:
+      max-file-size: 500MB
+      max-request-size: 500MB
+  datasource:
+    # 数据库驱动：
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    # 数据源名称
+    name: defaultDataSource
+    # 数据库连接地址
+    url: jdbc:mysql://localhost:3306/ilearn?serverTimezone=UTC
+    # 数据库用户名&密码：
+    username: root
+    password: 123456
+    type: com.alibaba.druid.pool.DruidDataSource
+  mvc:
+    # 全局异常处理
+    throw-exception-if-no-handler-found: true
+  resources:
+    add-mappings: false
+  # 配置 redis
+  redis:
+    host: localhost
+    port: 6379
+    database: 9
+    # password:
+    # 设置 jedis 连接池
+    jedis:
+      pool:
+        max-active: 50
+        min-idle: 20
+
+#下面这些内容是为了让MyBatis映射
+mybatis:
+  #指定Mybatis的Mapper文件
+  mapper-locations: classpath:mappers/*xml
+  #指定Mybatis的实体目录
+  type-aliases-package: carry.ilearn.dataobject

@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="carry.ilearn.dao.UserDao">
+	<resultMap id="BaseResultMap" type="carry.ilearn.dataobject.UserDO">
+		<id column="id" jdbcType="INTEGER" property="id" />
+		<result column="name" jdbcType="VARCHAR" property="name" />
+		<result column="avatar_url" jdbcType="VARCHAR" property="avatarUrl" />
+		<result column="gender" jdbcType="TINYINT" property="gender" />
+		<result column="birthday" jdbcType="DATE" property="birthday" />
+		<result column="description" jdbcType="VARCHAR" property="description" />
+		<result column="main_email_id" jdbcType="INTEGER" property="mainEmailId" />
+		<result column="ecrypted_password" jdbcType="VARCHAR" property="ecryptedPassword" />
+	</resultMap>
+	<resultMap id="BaseResultMapWithRoles" type="carry.ilearn.dataobject.UserDO">
+		<id column="id" jdbcType="INTEGER" property="id" />
+		<result column="name" jdbcType="VARCHAR" property="name" />
+		<result column="avatar_url" jdbcType="VARCHAR" property="avatarUrl" />
+		<result column="gender" jdbcType="TINYINT" property="gender" />
+		<result column="birthday" jdbcType="DATE" property="birthday" />
+		<result column="description" jdbcType="VARCHAR" property="description" />
+		<result column="main_email_id" jdbcType="INTEGER" property="mainEmailId" />
+		<result column="ecrypted_password" jdbcType="VARCHAR" property="ecryptedPassword" />
+		<collection property="roles" ofType="carry.ilearn.dataobject.RoleDO" column="id"
+		            select="carry.ilearn.dao.RoleDao.selectRolesByUserId" />
+	</resultMap>
+	<resultMap id="PassportResultMap" type="carry.ilearn.dataobject.UserDO">
+		<id column="id" jdbcType="INTEGER" property="id" />
+		<result column="name" jdbcType="VARCHAR" property="name" />
+		<result column="ecrypted_password" jdbcType="VARCHAR" property="ecryptedPassword" />
+		<collection property="roles" ofType="carry.ilearn.dataobject.RoleDO" column="id"
+		            select="carry.ilearn.dao.RoleDao.selectRolesByUserId" />
+	</resultMap>
+	<sql id="Base_Column_List">
+		id, `name`, avatar_url, gender, birthday, `description`, main_email_id, ecrypted_password
+	</sql>
+	<select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+		select
+		<include refid="Base_Column_List" />
+		from user
+		where id = #{id,jdbcType=INTEGER}
+	</select>
+	<select id="selectPassportByEmail" resultMap="PassportResultMap">
+		select
+			user.id,
+			ecrypted_password
+		from
+			user
+				join email on email.email = #{email,jdbcType=VARCHAR}
+				and user.main_email_id = email.id
+				and user.id = email.user_id
+	</select>
+	<select id="selectByEmail" resultMap="BaseResultMapWithRoles">
+		select
+		<include refid="Base_Column_List" />
+		from user
+		where main_email_id = (
+		select id
+		from email
+		where email = #{email,jdbcType=VARCHAR})
+	</select>
+	<select id="selectExceptFirstWithRoles" resultMap="PassportResultMap">
+		select
+			id,
+			name
+		from
+			user
+		where
+				id > (select
+					      id
+				      from
+					      user
+				      limit 1)
+	</select>
+	<delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+		delete
+		from
+			user
+		where
+			id = #{id,jdbcType=INTEGER}
+	</delete>
+	<insert id="insert" keyColumn="id" keyProperty="id" parameterType="carry.ilearn.dataobject.UserDO"
+	        useGeneratedKeys="true">
+		insert into user
+			(`name`, avatar_url, gender,
+			 birthday, `description`, main_email_id,
+			 ecrypted_password)
+		values
+			(#{name,jdbcType=VARCHAR}, #{avatarUrl,jdbcType=VARCHAR}, #{gender,jdbcType=TINYINT},
+			 #{birthday,jdbcType=DATE}, #{description,jdbcType=VARCHAR}, #{mainEmailId,jdbcType=INTEGER},
+			 #{ecryptedPassword,jdbcType=VARCHAR})
+	</insert>
+	<insert id="insertSelective" keyColumn="id" keyProperty="id" parameterType="carry.ilearn.dataobject.UserDO"
+	        useGeneratedKeys="true">
+		insert into user
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="name != null">
+				`name`,
+			</if>
+			<if test="avatarUrl != null">
+				avatar_url,
+			</if>
+			<if test="gender != null">
+				gender,
+			</if>
+			<if test="birthday != null">
+				birthday,
+			</if>
+			<if test="description != null">
+				`description`,
+			</if>
+			<if test="mainEmailId != null">
+				main_email_id,
+			</if>
+			<if test="ecryptedPassword != null">
+				ecrypted_password,
+			</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="name != null">
+				#{name,jdbcType=VARCHAR},
+			</if>
+			<if test="avatarUrl != null">
+				#{avatarUrl,jdbcType=VARCHAR},
+			</if>
+			<if test="gender != null">
+				#{gender,jdbcType=TINYINT},
+			</if>
+			<if test="birthday != null">
+				#{birthday,jdbcType=DATE},
+			</if>
+			<if test="description != null">
+				#{description,jdbcType=VARCHAR},
+			</if>
+			<if test="mainEmailId != null">
+				#{mainEmailId,jdbcType=INTEGER},
+			</if>
+			<if test="ecryptedPassword != null">
+				#{ecryptedPassword,jdbcType=VARCHAR},
+			</if>
+		</trim>
+	</insert>
+	<update id="updateByPrimaryKeySelective" parameterType="carry.ilearn.dataobject.UserDO">
+		update user
+		<set>
+			<if test="name != null">
+				`name` = #{name,jdbcType=VARCHAR},
+			</if>
+			<if test="avatarUrl != null">
+				avatar_url = #{avatarUrl,jdbcType=VARCHAR},
+			</if>
+			<if test="gender != null">
+				gender = #{gender,jdbcType=TINYINT},
+			</if>
+			<if test="birthday != null">
+				birthday = #{birthday,jdbcType=DATE},
+			</if>
+			<if test="description != null">
+				`description` = #{description,jdbcType=VARCHAR},
+			</if>
+			<if test="mainEmailId != null">
+				main_email_id = #{mainEmailId,jdbcType=INTEGER},
+			</if>
+			<if test="ecryptedPassword != null">
+				ecrypted_password = #{ecryptedPassword,jdbcType=VARCHAR},
+			</if>
+		</set>
+		where id = #{id,jdbcType=INTEGER}
+	</update>
+	<update id="updateByPrimaryKey" parameterType="carry.ilearn.dataobject.UserDO">
+		update user
+		set `name`            = #{name,jdbcType=VARCHAR},
+		    avatar_url        = #{avatarUrl,jdbcType=VARCHAR},
+		    gender            = #{gender,jdbcType=TINYINT},
+		    birthday          = #{birthday,jdbcType=DATE},
+		    `description`     = #{description,jdbcType=VARCHAR},
+		    main_email_id     = #{mainEmailId,jdbcType=INTEGER},
+		    ecrypted_password = #{ecryptedPassword,jdbcType=VARCHAR}
+		where
+			id = #{id,jdbcType=INTEGER}
+	</update>
+	<update id="updateAvatarUrl">
+		update user
+		set avatar_url = #{avatarUrl,jdbcType=VARCHAR}
+		where
+			id = #{id,jdbcType=INTEGER}
+	</update>
+</mapper>

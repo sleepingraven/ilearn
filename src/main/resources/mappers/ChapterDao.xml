@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="carry.ilearn.dao.ChapterDao">
+	<resultMap id="BaseResultMap" type="carry.ilearn.dataobject.ChapterDO">
+		<id column="id" jdbcType="INTEGER" property="id" />
+		<result column="title" jdbcType="VARCHAR" property="title" />
+		<result column="description" jdbcType="VARCHAR" property="description" />
+		<result column="course_id" jdbcType="INTEGER" property="courseId" />
+		<collection property="sectionDOList" ofType="carry.ilearn.dataobject.SectionDO" column="id"
+		            select="carry.ilearn.dao.SectionDao.selectByChapterId" />
+	</resultMap>
+	<resultMap id="BaseResultMapWithLearn" type="carry.ilearn.dataobject.ChapterDO">
+		<id column="id" jdbcType="INTEGER" property="id" />
+		<result column="title" jdbcType="VARCHAR" property="title" />
+		<result column="description" jdbcType="VARCHAR" property="description" />
+		<result column="course_id" jdbcType="INTEGER" property="courseId" />
+		<collection property="sectionDOList" ofType="carry.ilearn.dataobject.SectionDO"
+		            column="{ chapterId=id, userId=userId }"
+		            select="carry.ilearn.dao.SectionDao.selectByChapterIdWithLearn" />
+	</resultMap>
+	<sql id="Base_Column_List">
+		id, title, description, course_id
+	</sql>
+	<select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+		select
+		<include refid="Base_Column_List" />
+		from chapter
+		where id = #{id,jdbcType=INTEGER}
+	</select>
+	<select id="selectByCourseId" resultMap="BaseResultMap">
+		select
+		<include refid="Base_Column_List" />
+		from chapter
+		where course_id = #{courseId,jdbcType=INTEGER}
+	</select>
+	<select id="selectByCourseIdWithLearn" resultMap="BaseResultMapWithLearn">
+		select
+			id,
+			title,
+			description,
+			course_id,
+			#{userId,jdbcType=INTEGER} userId
+		from
+			chapter
+		where
+			course_id = #{courseId,jdbcType=INTEGER}
+	</select>
+	<select id="checkByIdAndUserId" resultType="java.lang.Integer">
+		select
+			id
+		from
+			course
+		where
+				id =
+				(select
+					 course_id
+				 from
+					 chapter
+				 where
+					 id = #{id,jdbcType=INTEGER})
+		  and   user_id = #{userId,jdbcType=INTEGER}
+	</select>
+	<delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+		delete
+		from
+			chapter
+		where
+			id = #{id,jdbcType=INTEGER}
+	</delete>
+	<insert id="insert" keyColumn="id" keyProperty="id" parameterType="carry.ilearn.dataobject.ChapterDO"
+	        useGeneratedKeys="true">
+		insert into chapter
+			(title, description, course_id)
+		values
+			(#{title,jdbcType=VARCHAR}, #{description,jdbcType=VARCHAR}, #{courseId,jdbcType=INTEGER})
+	</insert>
+	<insert id="insertSelective" keyColumn="id" keyProperty="id" parameterType="carry.ilearn.dataobject.ChapterDO"
+	        useGeneratedKeys="true">
+		insert into chapter
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="title != null">
+				title,
+			</if>
+			<if test="description != null">
+				description,
+			</if>
+			<if test="courseId != null">
+				course_id,
+			</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="title != null">
+				#{title,jdbcType=VARCHAR},
+			</if>
+			<if test="description != null">
+				#{description,jdbcType=VARCHAR},
+			</if>
+			<if test="courseId != null">
+				#{courseId,jdbcType=INTEGER},
+			</if>
+		</trim>
+	</insert>
+	<update id="updateByPrimaryKeySelective" parameterType="carry.ilearn.dataobject.ChapterDO">
+		update chapter
+		<set>
+			<if test="title != null">
+				title = #{title,jdbcType=VARCHAR},
+			</if>
+			<if test="description != null">
+				description = #{description,jdbcType=VARCHAR},
+			</if>
+			<if test="courseId != null">
+				course_id = #{courseId,jdbcType=INTEGER},
+			</if>
+		</set>
+		where id = #{id,jdbcType=INTEGER}
+	</update>
+	<update id="updateByPrimaryKey" parameterType="carry.ilearn.dataobject.ChapterDO">
+		update chapter
+		set title       = #{title,jdbcType=VARCHAR},
+		    description = #{description,jdbcType=VARCHAR},
+		    course_id   = #{courseId,jdbcType=INTEGER}
+		where
+			id = #{id,jdbcType=INTEGER}
+	</update>
+</mapper>

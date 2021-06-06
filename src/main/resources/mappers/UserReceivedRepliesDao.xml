@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="carry.ilearn.dao.UserReceivedRepliesDao">
+	<resultMap id="BaseResultMap" type="carry.ilearn.dataobject.UserReceivedRepliesDO">
+		<id column="id" jdbcType="INTEGER" property="id" />
+		<result column="comment_from_id" jdbcType="INTEGER" property="commentFromId" />
+		<result column="user_to_id" jdbcType="INTEGER" property="userToId" />
+		<result column="post_id" jdbcType="INTEGER" property="postId" />
+		<result column="unread" jdbcType="BOOLEAN" property="unread" />
+		<result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+		<association property="userFromDO" column="comment_from_id" javaType="carry.ilearn.dataobject.UserDO"
+		             select="carry.ilearn.dao.UserReceivedRepliesDao.selectFromUser" />
+		<association property="postDO" column="post_id" javaType="carry.ilearn.dataobject.PostDO"
+		             select="carry.ilearn.dao.PostDao.selectByPrimaryKey" />
+	</resultMap>
+	<sql id="Base_Column_List">
+		id, comment_from_id, user_to_id, post_id
+	</sql>
+	<select id="selectByUserToIdPaged" resultMap="BaseResultMap">
+		select
+			user_received_replies.id,
+			comment_from_id,
+			user_to_id,
+			post_id,
+			unread.id is not null unread,
+			statement.create_time
+		from
+			user_received_replies
+				left join user_received_replies_unread unread on user_received_replies.id = unread.received_id
+				join      comment on comment_from_id = comment.id
+				join      statement on comment.statement_id = statement.id
+		where
+			  user_to_id = #{userToId,jdbcType=INTEGER}
+		  and user_received_replies.id &lt;= #{beginId,jdbcType=INTEGER}
+		order by unread desc, user_received_replies.id desc
+		limit #{offset,jdbcType=INTEGER}, #{limit,jdbcType=INTEGER}
+	</select>
+	<select id="selectFromUser" resultType="carry.ilearn.dataobject.UserDO">
+		select
+			user.id,
+			user.name
+		from
+			user
+		where
+				user.id = (select
+					           statement.user_id
+				           from
+					           statement
+				           where
+						           statement.id =
+						           (select
+							            statement_id
+						            from
+							            comment
+						            where
+							            comment.id = #{commentFromId,jdbcType=INTEGER}))
+	</select>
+	<select id="selectReplyReceivedSnapshotBeginId" resultType="java.lang.Integer">
+		select
+			if(maxIdTemp.maxId is null, 0, ifnull((select
+				                                       received_id
+			                                       from
+				                                       user_received_replies_unread
+			                                       where
+				                                       received_id = maxId), -maxId))
+		from
+			(select
+				 max(user_received_replies.id) maxId
+			 from
+				 user_received_replies
+			 where
+				 user_to_id = #{userId,jdbcType=INTEGER}) maxIdTemp
+	</select>
+	<delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+		delete
+		from
+			user_received_replies
+		where
+			id = #{id,jdbcType=INTEGER}
+	</delete>
+	<delete id="deleteUnread">
+		delete
+		from
+			user_received_replies_unread
+		where
+				received_id in (select
+					                id
+				                from
+					                user_received_replies
+				                where
+					                  user_to_id = #{userId,jdbcType=INTEGER}
+				                  and id &lt;= #{beginId,jdbcType=INTEGER})
+	</delete>
+	<insert id="insert" keyColumn="id" keyProperty="id" parameterType="carry.ilearn.dataobject.UserReceivedRepliesDO"
+	        useGeneratedKeys="true">
+		insert into user_received_replies
+			(comment_from_id, user_to_id, post_id)
+		values
+			(#{commentFromId,jdbcType=INTEGER}, #{userToId,jdbcType=INTEGER}, #{postId,jdbcType=INTEGER})
+	</insert>
+	<insert id="insertSelective" keyColumn="id" keyProperty="id"
+	        parameterType="carry.ilearn.dataobject.UserReceivedRepliesDO" useGeneratedKeys="true">
+		insert into user_received_replies
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="commentFromId != null">
+				comment_from_id,
+			</if>
+			<if test="userToId != null">
+				user_to_id,
+			</if>
+			<if test="postId != null">
+				post_id,
+			</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="commentFromId != null">
+				#{commentFromId,jdbcType=INTEGER},
+			</if>
+			<if test="userToId != null">
+				#{userToId,jdbcType=INTEGER},
+			</if>
+			<if test="postId != null">
+				#{postId,jdbcType=INTEGER},
+			</if>
+		</trim>
+	</insert>
+	<update id="updateByPrimaryKeySelective" parameterType="carry.ilearn.dataobject.UserReceivedRepliesDO">
+		update user_received_replies
+		<set>
+			<if test="commentFromId != null">
+				comment_from_id = #{commentFromId,jdbcType=INTEGER},
+			</if>
+			<if test="userToId != null">
+				user_to_id = #{userToId,jdbcType=INTEGER},
+			</if>
+			<if test="postId != null">
+				post_id = #{postId,jdbcType=INTEGER},
+			</if>
+		</set>
+		where id = #{id,jdbcType=INTEGER}
+	</update>
+	<update id="updateByPrimaryKey" parameterType="carry.ilearn.dataobject.UserReceivedRepliesDO">
+		update user_received_replies
+		set comment_from_id = #{commentFromId,jdbcType=INTEGER},
+		    user_to_id      = #{userToId,jdbcType=INTEGER},
+		    post_id         = #{postId,jdbcType=INTEGER}
+		where
+			id = #{id,jdbcType=INTEGER}
+	</update>
+</mapper>

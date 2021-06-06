@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="carry.ilearn.dao.EmailDao">
+	<resultMap id="BaseResultMap" type="carry.ilearn.dataobject.EmailDO">
+		<id column="id" jdbcType="INTEGER" property="id" />
+		<result column="email" jdbcType="VARCHAR" property="email" />
+		<result column="user_id" jdbcType="INTEGER" property="userId" />
+	</resultMap>
+	<sql id="Base_Column_List">
+		id, email, user_id
+	</sql>
+	<select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+		select
+		<include refid="Base_Column_List" />
+		from email
+		where id = #{id,jdbcType=INTEGER}
+	</select>
+	<select id="selectByUserId" resultMap="BaseResultMap">
+		select
+			id,
+			email,
+			user_id,
+			id = (select
+				      main_email_id
+			      from
+				      user
+			      where
+				      id = #{userId,jdbcType=INTEGER}) main_flag
+		from
+			email
+		where
+			user_id = #{userId,jdbcType=INTEGER}
+		order by main_flag desc
+	</select>
+	<select id="selectByEmail" resultMap="BaseResultMap">
+		select
+		<include refid="Base_Column_List" />
+		from email
+		where email = #{email,jdbcType=INTEGER}
+	</select>
+	<select id="selectNonMainIdByEmailAndUserId" resultType="java.lang.Integer">
+		select
+			email.id
+		from
+			email
+				join user on email.user_id = user.id
+		where
+			  email.email = #{email,jdbcType=VARCHAR}
+		  and email.user_id = #{userId,jdbcType=VARCHAR}
+		  and user.main_email_id &lt;&gt; email.id
+	</select>
+	<delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+		delete
+		from
+			email
+		where
+			id = #{id,jdbcType=INTEGER}
+	</delete>
+	<insert id="insert" keyColumn="id" keyProperty="id" parameterType="carry.ilearn.dataobject.EmailDO"
+	        useGeneratedKeys="true">
+		insert into email
+			(email, user_id)
+		values
+			(#{email,jdbcType=VARCHAR}, #{userId,jdbcType=INTEGER})
+	</insert>
+	<insert id="insertSelective" keyColumn="id" keyProperty="id" parameterType="carry.ilearn.dataobject.EmailDO"
+	        useGeneratedKeys="true">
+		insert into email
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="email != null">
+				email,
+			</if>
+			<if test="userId != null">
+				user_id,
+			</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="email != null">
+				#{email,jdbcType=VARCHAR},
+			</if>
+			<if test="userId != null">
+				#{userId,jdbcType=INTEGER},
+			</if>
+		</trim>
+	</insert>
+	<update id="updateByPrimaryKeySelective" parameterType="carry.ilearn.dataobject.EmailDO">
+		update email
+		<set>
+			<if test="email != null">
+				email = #{email,jdbcType=VARCHAR},
+			</if>
+			<if test="userId != null">
+				user_id = #{userId,jdbcType=INTEGER},
+			</if>
+		</set>
+		where id = #{id,jdbcType=INTEGER}
+	</update>
+	<update id="updateByPrimaryKey" parameterType="carry.ilearn.dataobject.EmailDO">
+		update email
+		set email   = #{email,jdbcType=VARCHAR},
+		    user_id = #{userId,jdbcType=INTEGER}
+		where
+			id = #{id,jdbcType=INTEGER}
+	</update>
+</mapper>

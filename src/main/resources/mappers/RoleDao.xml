@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="carry.ilearn.dao.RoleDao">
+	<resultMap id="BaseResultMap" type="carry.ilearn.dataobject.RoleDO">
+		<id column="id" jdbcType="INTEGER" property="id" />
+		<result column="name" jdbcType="VARCHAR" property="name" />
+		<result column="alias" jdbcType="VARCHAR" property="alias" />
+	</resultMap>
+	<sql id="Base_Column_List">
+		id, `name`, `alias`
+	</sql>
+	<select id="selectRolesByUserId" resultMap="BaseResultMap">
+		select
+			role.id,
+			role.name,
+			role.alias
+		from
+			role
+				join user_role on role.id = user_role.role_id
+				and user_role.user_id = #{userId,jdbcType=INTEGER}
+	</select>
+	<select id="selectAll" resultMap="BaseResultMap">
+		select
+		<include refid="Base_Column_List" />
+		from role
+	</select>
+</mapper>

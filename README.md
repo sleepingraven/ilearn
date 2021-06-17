@@ -19,6 +19,7 @@
     - [5. 通知](#5-通知)
     - [6. 考试](#6-考试)
     - [7. 认证和授权](#7-认证和授权)
+- [五、链接](#五-链接)
 
 <!-- /code_chunk_output -->
 
@@ -146,6 +147,9 @@ Set，遍历讨论贴查看是否点赞。
 系统的用户鉴权使用的是 Spring Security 框架，会拦截请求，对设置的路径进行检查，可以设置匿名权限、认证权限、需要的角色或是全部放行。当用户未认证或授权时访问对应的路径，就返回一个 403 状态码；当用户登录失效时，会返回
 401 状态码，前端就清除 Token 内容。
 
+## 五、链接
+
+- [ilearn-front](https://github.com/sleepingraven/ilearn-front)
 
 [file:use-case-diagram-anonymous.png]: .github/readme/use-case-diagram-anonymous.png
 

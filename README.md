@@ -28,7 +28,7 @@
 - 运行环境
     - JDK 1.8
     - MySQL 8.0 / Redis 5 以上
-- 数据库/文件资源
+- 数据库 / 文件资源
     - 微云（需要登陆）
         - 链接：https://share.weiyun.com/r3zXOJBN 密码：zptqpv
     - 天翼云盘（需要登陆）

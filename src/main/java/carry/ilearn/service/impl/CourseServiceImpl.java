@@ -15,11 +15,17 @@ import carry.ilearn.service.CourseService;
 import carry.ilearn.service.datatransferobject.CourseDTO;
 import carry.ilearn.service.datatransferobject.CourseReferDTO;
 import carry.ilearn.service.utils.CourseLearnServiceUtil;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.data.redis.core.DefaultTypedTuple;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ZSetOperations.TypedTuple;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * @author Carry
@@ -27,7 +33,7 @@ import java.util.List;
  */
 @Transactional(rollbackFor = Exception.class)
 @Service
-public class CourseServiceImpl implements CourseService {
+public class CourseServiceImpl implements CourseService, InitializingBean {
     @Resource
     private CourseDao courseDao;
     @Resource
@@ -38,6 +44,28 @@ public class CourseServiceImpl implements CourseService {
     private CoursewareGroupDao coursewareGroupDao;
     @Resource
     private CourseReferDao courseReferDao;
+    @Resource
+    private RedisTemplate<String, String> redisTemplateCourseKeys;
+    @Resource
+    private RedisTemplate<String, CourseDTO> redisTemplateCourse;
+    
+    @Override
+    public void afterPropertiesSet() {
+        final int page = 8;
+        for (int offset = 0; ; offset += page) {
+            final List<CourseDO> courseDOS = courseDao.selectAllPaged(offset, page);
+            final Set<TypedTuple<String>> collect = courseDOS.stream()
+                                                             .filter(c -> !c.getBanned())
+                                                             .map(c -> new DefaultTypedTuple<>(
+                                                                     "course_of_id_" + c.getId(),
+                                                                     c.getId().doubleValue()))
+                                                             .collect(Collectors.toSet());
+            redisTemplateCourseKeys.opsForZSet().add("course_available_keys", collect);
+            if (collect.size() < page) {
+                break;
+            }
+        }
+    }
     
     @Override
     public void addCourse(CourseCreationQuery courseCreationQuery) {
@@ -55,6 +83,13 @@ public class CourseServiceImpl implements CourseService {
                                                           courseIdentifierQuery.getBanned());
         if (i == 0) {
             throw new BusinessException(EmBusinessError.PARAMETER_VALIDATION_ERROR, "未找到该课程");
+        }
+        
+        final String key = "course_of_id_" + courseIdentifierQuery.getCourseId();
+        if (courseIdentifierQuery.getBanned()) {
+            redisTemplateCourseKeys.opsForZSet().remove("course_available_keys", key);
+        } else {
+            redisTemplateCourseKeys.opsForZSet().add("course_available_keys", key, courseIdentifierQuery.getCourseId());
         }
     }
     
@@ -88,19 +123,60 @@ public class CourseServiceImpl implements CourseService {
                                                                     coursePreviewImgUrlQuery.getId());
         courseDOOrigin.setPreviewImgUrl(coursePreviewImgUrlQuery.getUrl());
         courseDao.updateByPrimaryKeySelective(courseDOOrigin);
+        
+        final String key = "course_of_id_" + coursePreviewImgUrlQuery.getId();
+        redisTemplateCourse.delete(key);
     }
     
     @Override
     public PageModel<CourseDTO> getCourseListPaged(PageQuery pageQuery) {
-        List<CourseDO> courseDOs =
-                courseDao.selectAllPaged(pageQuery.getPageIdx() * pageQuery.getPageSize(), pageQuery.getPageSize());
-        final List<CourseDTO> courseDTOS = courseConverter.listCourseDO2CourseDTO(courseDOs);
+        // 获得 id 和 key
+        final int start = pageQuery.getPageIdx() * pageQuery.getPageSize();
+        Set<TypedTuple<String>> courseKeyCacheSet = redisTemplateCourseKeys.opsForZSet()
+                                                                           .rangeWithScores("course_available_keys",
+                                                                                            start, start +
+                                                                                                   pageQuery.getPageSize() -
+                                                                                                   1);
+        List<Integer> ids = new ArrayList<>(courseKeyCacheSet.size());
+        List<String> keys = new ArrayList<>(courseKeyCacheSet.size());
+        for (final TypedTuple<String> t : courseKeyCacheSet) {
+            ids.add(t.getScore().intValue());
+            keys.add(t.getValue());
+        }
         
-        final long totalNum = courseDao.selectTotalNum();
+        // 获得缺失的元素
+        List<Integer> missingIds = new ArrayList<>(courseKeyCacheSet.size());
+        List<Integer> missingIdx = new ArrayList<>(courseKeyCacheSet.size());
+        final List<CourseDTO> courseDTOList = redisTemplateCourse.opsForValue().multiGet(keys);
+        for (int i = 0; i < courseDTOList.size(); i++) {
+            if (courseDTOList.get(i) == null) {
+                missingIds.add(ids.get(i));
+                missingIdx.add(i);
+            }
+        }
+        if (!missingIds.isEmpty()) {
+            // 查找缺失的元素
+            final List<CourseDO> courseDOS = courseDao.selectListByIdArray(missingIds.toArray(new Integer[0]));
+            final List<CourseDTO> courseDTOS = courseConverter.listCourseDO2CourseDTO(courseDOS);
+            for (int i = 0; i < missingIdx.size(); i++) {
+                courseDTOList.set(missingIdx.get(i), courseDTOS.get(i));
+            }
+            
+            // 回写缺失的元素
+            final Random random = new Random();
+            for (int i = 0; i < missingIdx.size(); i++) {
+                redisTemplateCourse.opsForValue()
+                                   .set(keys.get(missingIdx.get(i)), courseDTOS.get(i), 10 * 60 + random.nextInt(10),
+                                        TimeUnit.SECONDS);
+            }
+        }
         
+        final long totalNum =
+                Optional.ofNullable(redisTemplateCourseKeys.opsForZSet().size("course_available_keys")).orElse(0L);
+        // 返回结果
         final PageModel<CourseDTO> pageModel = new PageModel<>();
         pageModel.setTotalNum(totalNum);
-        pageModel.setData(courseDTOS);
+        pageModel.setData(courseDTOList);
         return pageModel;
     }
     
@@ -124,6 +200,13 @@ public class CourseServiceImpl implements CourseService {
     @Override
     public void deleteRefer(CourseReferDeleteQuery courseReferDeleteQuery) {
         courseReferDao.deleteByUser(courseReferDeleteQuery.getReferId(), courseReferDeleteQuery.getUserId());
+    }
+    
+    @Override
+    public List<CourseDTO> selectByTitle(String title) {
+        final List<CourseDO> courseDOS = courseDao.selectByTitle(title);
+        final List<CourseDTO> courseDTOS = courseConverter.listCourseDO2CourseDTO(courseDOS);
+        return courseDTOS;
     }
     
 }

@@ -59,6 +59,25 @@
 		where
 			banned = false
 	</select>
+	<select id="selectListByIdArray" resultMap="BaseResultMap">
+		select
+		<include refid="Base_Column_List" />
+		from course
+		where id in
+		<foreach collection="array" item="id" index="index" open="(" close=")" separator=",">
+			#{id,jdbcType=INTEGER}
+		</foreach>
+		ORDER BY
+		<foreach collection="array" item="id" index="index" open="FIELD(id," close=")" separator=",">
+			#{id,jdbcType=INTEGER}
+		</foreach>
+	</select>
+	<select id="selectByTitle" resultMap="BaseResultMap">
+		select
+		<include refid="Base_Column_List" />
+		from course
+		where title like CONCAT('%',#{title},'%')
+	</select>
 	<delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
 		delete
 		from

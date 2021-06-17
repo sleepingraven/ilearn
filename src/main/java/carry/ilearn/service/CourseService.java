@@ -34,4 +34,6 @@ public interface CourseService {
     
     void deleteRefer(CourseReferDeleteQuery courseReferDeleteQuery);
     
+    List<CourseDTO> selectByTitle(String title);
+    
 }

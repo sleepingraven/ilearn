@@ -8,13 +8,14 @@ import carry.ilearn.controller.viewobject.CourseReferVO;
 import carry.ilearn.converter.CourseConverter;
 import carry.ilearn.model.PageModel;
 import carry.ilearn.query.*;
-import carry.ilearn.service.UserStateService;
 import carry.ilearn.service.CourseService;
 import carry.ilearn.service.FileService;
+import carry.ilearn.service.UserStateService;
 import carry.ilearn.service.datatransferobject.CourseDTO;
 import carry.ilearn.service.datatransferobject.CourseReferDTO;
 import carry.ilearn.service.datatransferobject.UserDTO;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -37,6 +38,8 @@ public class CourseController {
     private UserStateService userStateService;
     @Resource
     private CourseConverter courseConverter;
+    @Resource
+    private RedisTemplate<String, CourseDTO> redisTemplateCourse;
     
     @PostMapping(path = "/add")
     public CommonReturnType<?> addCourse(@RequestBody String courseName) {
@@ -142,6 +145,13 @@ public class CourseController {
         courseReferDeleteQuery.setUserId(loginUser.getId());
         courseService.deleteRefer(courseReferDeleteQuery);
         return CommonReturnType.empty();
+    }
+    
+    @GetMapping(path = "/preview/like")
+    public CommonReturnType<?> getCoursePreview(String title) throws BusinessException {
+        List<CourseDTO> courseDTOList = courseService.selectByTitle(title);
+        final List<CoursePreviewVO> coursePreviewVOList = courseConverter.listCourseDTO2CoursePreviewVO(courseDTOList);
+        return CommonReturnType.create(coursePreviewVOList);
     }
     
 }

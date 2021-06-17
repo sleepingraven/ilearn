@@ -30,9 +30,11 @@ public interface CourseDao {
     
     List<CourseDO> selectAllPaged(@Param("offset") Integer offset, @Param("limit") Integer limit);
     
-    /**
-     * todo count 优化
-     */
+    @Deprecated
     long selectTotalNum();
+    
+    List<CourseDO> selectListByIdArray(Integer[] idArray);
+    
+    List<CourseDO> selectByTitle(String title);
     
 }
